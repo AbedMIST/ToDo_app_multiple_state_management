@@ -1,9 +1,7 @@
 
-
 import 'package:flutter/material.dart';
 import 'package:to_do_app/todo.dart';
 
-import 'ToDoController.dart';
 
 class ToDoItems extends StatelessWidget {
 
@@ -24,7 +22,7 @@ class ToDoItems extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
 
-      margin: EdgeInsets.only(bottom: 15),
+      margin: const EdgeInsets.only(bottom: 15),
       child: ListTile(
         onTap: (){
           print(todo.id);
@@ -55,7 +53,7 @@ class ToDoItems extends StatelessWidget {
           ),
           child: IconButton(
             color: Colors.white,
-            icon: Icon(Icons.delete),
+            icon: const Icon(Icons.delete),
             iconSize: 18,
             onPressed: (){
               print("Deleted id => ${todo.id}");
