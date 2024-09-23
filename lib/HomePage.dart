@@ -1,11 +1,17 @@
+import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
+import 'package:flutter/services.dart';
 import 'package:to_do_app/ToDoItems.dart';
 import 'package:to_do_app/todo.dart';
 
 import 'ToDoController.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:avatar_glow/avatar_glow.dart';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,18 +20,49 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin{
 
   late final ToDoController todoController;
+  ConnectivityResult _connectionStatus = ConnectivityResult.none;
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  late AnimationController _animationController;
+  late SpringSimulation _simulation;
 
   @override
   void initState() {
     todoController=ToDoController();  //instance created lately
     super.initState();
+
+    initConnectivity();
+
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+
+    _animationController = AnimationController(
+      vsync: this,
+      lowerBound: 0,
+      upperBound: double.infinity,
+      duration: const Duration(seconds: 2),
+    );
+
+    _simulation = SpringSimulation(
+      const SpringDescription(
+          mass: 0.5,
+          stiffness: 100,
+          damping: 10
+      ),
+      0,  //start position
+      100, //end position
+      0, //velocity
+    );
+
+    _animationController.animateWith(_simulation);
   }
 
   @override
   void dispose() {
+    _connectivitySubscription.cancel();
     super.dispose();
   }
 
@@ -40,6 +77,32 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Color(0xFF0ec3e3) ,
         title: Text("ToDo App(StreamBuilder)"),
         centerTitle: true,
+        actions: [
+          ElevatedButton(
+              onPressed: () async{
+
+                final connectivityResult = await (Connectivity().checkConnectivity());
+                print(connectivityResult);
+
+                if (connectivityResult == ConnectivityResult.mobile) {
+                  print("I am connected to a mobile network.");
+                } else if (connectivityResult == ConnectivityResult.wifi) {
+                  print("I am connected to a wifi network.");
+                } else if (connectivityResult == ConnectivityResult.ethernet) {
+                  print("I am connected to a ethernet network.");
+                } else if (connectivityResult == ConnectivityResult.vpn) {
+                  print("I am connected to a vpn network.");
+                } else if (connectivityResult == ConnectivityResult.bluetooth) {
+                  print("I am connected to a bluetooth.");
+                } else if (connectivityResult == ConnectivityResult.other) {
+                  print("I am connected to a network which is not in the above mentioned networks.");
+                } else if (connectivityResult == ConnectivityResult.none) {
+                  print("I am not connected to any network.");
+                }
+              },
+              child: Text("Go"),
+          ),
+        ],
       ),
 
       body: Stack(
@@ -76,6 +139,10 @@ class _HomePageState extends State<HomePage> {
 
                     ),
                   ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text("Connection Status: ${_connectionStatus}",style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
 
                 Align(
@@ -125,6 +192,29 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
 
+                InkWell(
+                  onTap: (){
+                    print("tapped");
+                    _animationController.animateWith(_simulation);
+                  },
+                  child: AnimatedBuilder(
+                    animation: _animationController,
+                    builder: (context, child) {
+                      return Transform.translate(
+                        offset: Offset(150,_animationController.value),
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
               ],
             )
           ),
@@ -152,6 +242,7 @@ class _HomePageState extends State<HomePage> {
                         icon: Icon(Icons.mic, size: 25, color: Colors.white),
                         onPressed: (){
                           textController.text = "Abed";
+                          _animationController.animateWith(_simulation);
                         },
                       ),
                     ),
@@ -165,7 +256,7 @@ class _HomePageState extends State<HomePage> {
                         right: 20,
                         left: 20,
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         boxShadow: const [BoxShadow(
@@ -201,8 +292,7 @@ class _HomePageState extends State<HomePage> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.blueAccent,
-                      minimumSize: Size(60, 60),
+                      minimumSize: const Size(60, 60),
                       elevation: 10,
                     ),
                   ),
@@ -222,5 +312,35 @@ class _HomePageState extends State<HomePage> {
   }
   void deleteToDo(String id){
     todoController.deleteItem(id);
+  }
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initConnectivity() async {
+    late ConnectivityResult result;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      result = await _connectivity.checkConnectivity();
+      print(result);
+    } on PlatformException catch (e) {
+      log('Couldn\'t check connectivity status', error: e);
+      return;
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) {
+      return Future.value(null);
+    }
+
+    return _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    //got a new connectivity status
+    setState(() {
+      _connectionStatus = result;
+      print(_connectionStatus);
+    });
   }
 }
