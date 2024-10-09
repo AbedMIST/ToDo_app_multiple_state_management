@@ -20,7 +20,7 @@ class _HomePageState extends State<HomePage>{
 
   @override
   void initState() {
-    todoController=ToDoController();  //instance created lately
+    todoController = ToDoController();  //instance created lately
     super.initState();
   }
 
@@ -38,7 +38,11 @@ class _HomePageState extends State<HomePage>{
       backgroundColor: const Color(0xFF7cded6),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0ec3e3) ,
-        title: const Text("ToDo App(ValueNotifier)"),
+        title: const Text(
+            "ToDo App(ValueNotifier)",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+        ),
         centerTitle: true,
         actions: [
           Padding(
@@ -55,91 +59,81 @@ class _HomePageState extends State<HomePage>{
 
       body: Stack(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+          SingleChildScrollView(
             child: Column(
-
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextField(
-                    onChanged: (value){
-
-                    },
-                    decoration: const InputDecoration(
-
-                      contentPadding: EdgeInsets.all(0),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        size: 21,
-                      ),
-                      prefixIconConstraints: BoxConstraints(
-                        maxHeight: 20,
-                        minWidth: 25
-                      ),
-                      border: InputBorder.none,
-                      hintText: "Search",
-                      hintStyle: TextStyle(color: Colors.grey),
-
-                    ),
-                  ),
-                ),
-
-                Align(
-                  alignment: Alignment.topLeft,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
                   child: Container(
-                    margin: const EdgeInsets.only(
-                      top: 35,
-                      bottom: 20,
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: StreamBuilder(                     //1st stream builder
-                      stream: todoController.stream,
-                      builder: (context, snap) {
-                        return Text(
-                            "All ToDos: ${todoController.size()}",
-                            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w400),
-                        );
-                      }
+                    child: TextField(
+                      onChanged: (value){
+            
+                      },
+                      decoration: const InputDecoration(
+            
+                        contentPadding: EdgeInsets.all(0),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          size: 21,
+                        ),
+                        prefixIconConstraints: BoxConstraints(
+                          maxHeight: 20,
+                          minWidth: 25
+                        ),
+                        border: InputBorder.none,
+                        hintText: "Search",
+                        hintStyle: TextStyle(color: Colors.grey),
+            
+                      ),
                     ),
                   ),
                 ),
+            
+                Container(
+                  margin: const EdgeInsets.only(
+                    top: 15,
+                    bottom: 10,
+                  ),
+                  child: ValueListenableBuilder(                     //1st stream builder
+                    valueListenable: todoController.sz,
+                    builder: (context, value, child) {
+                      return InkWell(
+                        child: Text(
+                            "All ToDos: $value",
+                            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w400),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            
+                ValueListenableBuilder(                         //second stream builder
+                  valueListenable: todoController.todosList,    // listen to your stream
+                  // initialData: [ToDo(id: "1", todoText: "Morning walk", isDone: true),],
+                  builder: (context, value, child) {
 
-                StreamBuilder(                         //second stream builder
-                  stream: todoController.stream,    // listen to your stream
-                  initialData: [ToDo(id: "1", todoText: "Morning walk", isDone: true),],
-                  builder: (BuildContext context,snapshot) {
+                    return Column(
+                      children: value.map((e) => ToDoItems(
+                        onToDoChanged: updateToDo,  //callback func send
+                        onDelete: deleteToDo,
+                        todo: e,
+                      ),
+                      ).toList(),
 
-                    if (snapshot.hasData) {  // Stream has emitted data
-                      var values = snapshot.data!;
-                      // Build your UI based on the data
-                      return Column(
-                        children: values.map((e) => ToDoItems(
-                            onToDoChanged: updateToDo,  //callback func send
-                            onDelete: deleteToDo,
-                            todo: e,
-                          ),
-                        ).toList(),
-
-                      ); //Update UI
-
-                    }
-                    else if (snapshot.hasError) {  // Stream has encountered an error
-                      return Text('Error: ${snapshot.error}');
-                    }
-                    else {      // Stream is still loading
-                      return const SizedBox.shrink();
-                    }
+                    );
                   },
                 ),
-
+            
               ],
-            )
+            ),
           ),
 
+          ///bottom section for adding list
           Align(
             alignment: Alignment.bottomCenter,
             child: Row(

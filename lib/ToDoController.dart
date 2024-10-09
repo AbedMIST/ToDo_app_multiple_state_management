@@ -1,48 +1,73 @@
 
-
-import 'dart:async';
-
+import 'package:flutter/foundation.dart';
 import 'package:to_do_app/todo.dart';
 
-class ToDoController{  //Update UI using StreamBuilder
 
-  final todosList = [
-    ToDo(id: "1", todoText: "Morning walk", isDone: true),
+abstract class NetworkClient {
+  void get(int a);
+  void post();
+}
+
+
+class DioNetworkClient implements NetworkClient {
+  @override
+  void get(int a) {
+    // TODO: implement get
+  }
+
+  @override
+  void post() {
+    // TODO: implement post
+  }
+
+}
+
+class HttpNetworkClient implements NetworkClient {
+  @override
+  void get(int a) {
+    // TODO: implement get
+  }
+
+  @override
+  void post() {
+    // TODO: implement post
+  }
+
+}
+
+class ToDoController {
+
+  final ValueNotifier<int> _sz = ValueNotifier(1);
+  ValueListenable<int> get sz  => _sz;
+
+  final ValueNotifier<List<ToDo>> todosList = ValueNotifier([]);
+
+  // final todosList = [
+  //   ToDo(id: "1", todoText: "Morning walk", isDone: true),
     // ToDo(id: "2", todoText: "Breakfast", isDone: true),
     // ToDo(id: "3", todoText: "Check mail"),
     // ToDo(id: "4", todoText: "Team working"),
     // ToDo(id: "5", todoText: "Work on mobile app"),
     // ToDo(id: "6", todoText: "Lunch with SBU Head."),
-  ];
-  final StreamController<List<ToDo>> _streamController = StreamController<List<ToDo>>.broadcast();
+  // ];
 
-  StreamSink<List<ToDo>> get sink => _streamController.sink;
 
-  Stream<List<ToDo>> get stream => _streamController.stream;
-
-  ToDoController(){
-    sink.add(todosList);
+  ToDoController() {
+    todosList.value.add(ToDo(id: "1", todoText: "Morning walk", isDone: true));
   }
 
-  addItem(ToDo newItem){
-
-    todosList.add(newItem);
-    sink.add(todosList);  //always observe the list
+  addItem(ToDo newItem) {
+    _sz.value++;
+    todosList.value = List.from(todosList.value)..add(newItem);
   }
 
-  deleteItem(String id){
-
-    todosList.removeWhere((element) => element.id == id);
-    sink.add(todosList);  //always observe the list
+  deleteItem(String id) {
+    _sz.value--;
+    todosList.value = List.from(todosList.value)..removeWhere((element) => element.id == id);
   }
 
-  updateItem(ToDo item){
+  updateItem(ToDo item) {
     item.isDone = !item.isDone;
-    sink.add(todosList);  //always observe the list
+    todosList.value = List.from(todosList.value);
   }
-
-  int size(){
-    return todosList.length;
-  }
-
 }

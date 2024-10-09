@@ -21,8 +21,7 @@ class ToDoItems extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-
-      margin: const EdgeInsets.only(bottom: 15),
+      margin: const EdgeInsets.symmetric(horizontal: 10,vertical: 5),
       child: ListTile(
         onTap: (){
           print(todo.id);
