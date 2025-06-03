@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'HomePage.dart';
 
 void main() {
@@ -12,10 +11,10 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: '',
-      home: const HomePage(),   //starts here..
+      home: HomePage(),   //starts here..
     );
   }
 }
